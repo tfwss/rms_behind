@@ -17,14 +17,14 @@ class Settings(BaseSettings):
     database_url: str = Field(
         default=(
             "mssql+pyodbc://wangxu:6225112Wx..@localhost:1433/"
-            "rms?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+            "rms?driver=ODBC+Driver+17+for+SQL+Server&TrustServerCertificate=yes"
         ),
         description="SQL Server connection string",
     )
     # ODBC connection string used for FILETABLE operations.
     odbc_connection_string: str = Field(
         default=(
-            "DRIVER={ODBC Driver 18 for SQL Server};"
+            "DRIVER={ODBC Driver 17 for SQL Server};"
             "SERVER=localhost,1433;"
             "DATABASE=rms;"
             "UID=wangxu;"
