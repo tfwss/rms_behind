@@ -1,3 +1,5 @@
+"""Services for storing report attachments in SQL Server FILETABLE."""
+
 import os
 from typing import Iterable, List
 
@@ -8,10 +10,14 @@ from app.core.config import settings
 
 
 class FileTableStorage:
+    """Encapsulates FILETABLE persistence logic."""
+
     def __init__(self, connection_string: str | None = None) -> None:
+        """Initialize with an optional override for the ODBC connection string."""
         self.connection_string = connection_string or settings.odbc_connection_string
 
     def _get_raw_connection(self) -> pyodbc.Connection:
+        """Open a raw pyodbc connection with autocommit enabled."""
         return pyodbc.connect(self.connection_string, autocommit=True)
 
     def save_files(self, report_id: int, files: Iterable[UploadFile]) -> List[dict]:
@@ -23,6 +29,7 @@ class FileTableStorage:
         2. Create FILETABLE (see scripts/sqlserver_init.sql).
         3. Grant INSERT/UPDATE permissions.
         """
+        # No attachments supplied means nothing to save.
         if not files:
             return []
 
@@ -30,9 +37,11 @@ class FileTableStorage:
         with self._get_raw_connection() as connection:
             cursor = connection.cursor()
             for upload in files:
+                # Normalize the filename and read file content.
                 filename = os.path.basename(upload.filename)
                 content = upload.file.read()
 
+                # Insert binary data into FILETABLE and capture the path.
                 cursor.execute(
                     """
                     INSERT INTO report_files (name, file_stream)
@@ -44,6 +53,7 @@ class FileTableStorage:
                 )
                 row = cursor.fetchone()
                 storage_path = row[0]
+                # Prepare metadata for ORM persistence.
                 saved.append(
                     {
                         "filename": filename,
