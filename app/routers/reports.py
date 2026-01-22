@@ -1,3 +1,5 @@
+"""API routes for creating and retrieving reports."""
+
 import json
 from typing import List, Optional
 
@@ -20,15 +22,18 @@ def create_report(
     files: Optional[List[UploadFile]] = File(default=None),
     db: Session = Depends(get_db),
 ):
+    """Create a report with field values and optional attachments."""
     try:
         values_data = json.loads(values)
     except json.JSONDecodeError as exc:
         raise HTTPException(status_code=400, detail="Invalid JSON for values") from exc
 
+    # Create the report row first to obtain the report ID.
     report = Report(report_type_id=report_type_id, title=title)
     db.add(report)
     db.flush()
 
+    # Build a lookup map of field definitions by name.
     field_map = {
         field.name: field
         for field in db.query(ReportField)
@@ -36,6 +41,7 @@ def create_report(
         .all()
     }
 
+    # Persist each provided field value if the field exists for the type.
     for field_name, value in values_data.items():
         field = field_map.get(field_name)
         if not field:
@@ -48,6 +54,7 @@ def create_report(
             )
         )
 
+    # Save attachments to FILETABLE and store metadata.
     storage = FileTableStorage()
     attachments = storage.save_files(report.id, files or [])
     for attachment in attachments:
@@ -60,6 +67,7 @@ def create_report(
             )
         )
 
+    # Finalize transaction and return response schema.
     db.commit()
     db.refresh(report)
     return _report_to_read(report)
@@ -67,6 +75,7 @@ def create_report(
 
 @router.get("/{report_id}", response_model=ReportRead)
 def get_report(report_id: int, db: Session = Depends(get_db)):
+    """Fetch a single report by ID."""
     report = db.query(Report).filter(Report.id == report_id).first()
     if not report:
         raise HTTPException(status_code=404, detail="Report not found")
@@ -75,10 +84,12 @@ def get_report(report_id: int, db: Session = Depends(get_db)):
 
 @router.get("", response_model=list[ReportRead])
 def list_reports(db: Session = Depends(get_db)):
+    """List all reports."""
     return [_report_to_read(report) for report in db.query(Report).all()]
 
 
 def _report_to_read(report: Report) -> ReportRead:
+    """Convert a Report ORM object into a ReportRead schema."""
     values = {value.field.name: value.value for value in report.values}
     return ReportRead(
         id=report.id,

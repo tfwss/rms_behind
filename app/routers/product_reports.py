@@ -1,3 +1,5 @@
+"""API routes for product report submissions."""
+
 from datetime import date
 from typing import Optional
 
@@ -28,7 +30,10 @@ def submit_full_report(
     meetingReport: Optional[UploadFile] = File(default=None),
     db: Session = Depends(get_db),
 ):
+    """Persist a product full report and its optional attachment."""
+    # Save the uploaded report file (if present) to the filesystem.
     file_path = save_product_report_file(product_code, meetingReport)
+    # Create the ORM object for the report data.
     report = ProductFullReport(
         token=token,
         operationcode=operationcode,
@@ -45,9 +50,11 @@ def submit_full_report(
     )
 
     try:
+        # Commit the report transaction.
         db.add(report)
         db.commit()
         return ProductFullReportResponse(operationcode=45, state="success")
     except Exception:
+        # Roll back and return a failure response if persistence fails.
         db.rollback()
         return ProductFullReportResponse(operationcode=45, state="fail")
