@@ -1,3 +1,5 @@
+"""API routes for report types and fields."""
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -15,6 +17,7 @@ router = APIRouter(prefix="/report-types", tags=["report-types"])
 
 @router.post("", response_model=ReportTypeRead)
 def create_report_type(payload: ReportTypeCreate, db: Session = Depends(get_db)):
+    """Create a new report type."""
     report_type = ReportType(name=payload.name, description=payload.description)
     db.add(report_type)
     db.commit()
@@ -24,6 +27,7 @@ def create_report_type(payload: ReportTypeCreate, db: Session = Depends(get_db))
 
 @router.get("", response_model=list[ReportTypeRead])
 def list_report_types(db: Session = Depends(get_db)):
+    """List all report types."""
     return db.query(ReportType).all()
 
 
@@ -31,10 +35,12 @@ def list_report_types(db: Session = Depends(get_db)):
 def create_report_field(
     report_type_id: int, payload: ReportFieldCreate, db: Session = Depends(get_db)
 ):
+    """Create a field under a report type."""
     report_type = db.query(ReportType).filter(ReportType.id == report_type_id).first()
     if not report_type:
         raise HTTPException(status_code=404, detail="Report type not found")
 
+    # Persist the new field definition.
     field = ReportField(
         report_type_id=report_type_id,
         name=payload.name,
@@ -50,6 +56,7 @@ def create_report_field(
 
 @router.get("/{report_type_id}/fields", response_model=list[ReportFieldRead])
 def list_report_fields(report_type_id: int, db: Session = Depends(get_db)):
+    """List all fields for a given report type."""
     return (
         db.query(ReportField)
         .filter(ReportField.report_type_id == report_type_id)

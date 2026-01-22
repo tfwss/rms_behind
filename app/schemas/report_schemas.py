@@ -1,3 +1,5 @@
+"""Pydantic schemas for report types, reports, and attachments."""
+
 from datetime import datetime
 from typing import Dict, List, Optional
 
@@ -5,6 +7,7 @@ from pydantic import BaseModel, Field
 
 
 class ReportFieldBase(BaseModel):
+    """Shared fields for report field schemas."""
     name: str = Field(..., examples=["device_model"])
     label: str = Field(..., examples=["设备型号"])
     field_type: str = Field(default="text")
@@ -12,10 +15,11 @@ class ReportFieldBase(BaseModel):
 
 
 class ReportFieldCreate(ReportFieldBase):
-    pass
+    """Payload used to create a report field."""
 
 
 class ReportFieldRead(ReportFieldBase):
+    """Response schema for a report field."""
     id: int
 
     class Config:
@@ -23,15 +27,17 @@ class ReportFieldRead(ReportFieldBase):
 
 
 class ReportTypeBase(BaseModel):
+    """Shared fields for report type schemas."""
     name: str
     description: Optional[str] = None
 
 
 class ReportTypeCreate(ReportTypeBase):
-    pass
+    """Payload used to create a report type."""
 
 
 class ReportTypeRead(ReportTypeBase):
+    """Response schema for a report type with its fields."""
     id: int
     fields: List[ReportFieldRead] = []
 
@@ -40,6 +46,7 @@ class ReportTypeRead(ReportTypeBase):
 
 
 class ReportCreate(BaseModel):
+    """Payload used to create a report and its field values."""
     report_type_id: int
     title: str
     values: Dict[str, Optional[str]] = Field(
@@ -49,6 +56,7 @@ class ReportCreate(BaseModel):
 
 
 class ReportAttachmentRead(BaseModel):
+    """Response schema for a report attachment."""
     id: int
     filename: str
     storage_path: str
@@ -59,6 +67,7 @@ class ReportAttachmentRead(BaseModel):
 
 
 class ReportRead(BaseModel):
+    """Response schema for a report with values and attachments."""
     id: int
     report_type_id: int
     title: str
