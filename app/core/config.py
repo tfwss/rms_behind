@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     database_url: str = Field(
         default=(
-            "mssql+pyodbc://sa:YourStrong!Passw0rd@localhost:1433/"
+            "mssql+pyodbc://wangxu:6225112Wx..@localhost:1433/"
             "rms?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
         ),
         description="SQL Server connection string",
@@ -20,11 +20,15 @@ class Settings(BaseSettings):
             "DRIVER={ODBC Driver 18 for SQL Server};"
             "SERVER=localhost,1433;"
             "DATABASE=rms;"
-            "UID=sa;"
-            "PWD=YourStrong!Passw0rd;"
+            "UID=wangxu;"
+            "PWD=6225112Wx..;"
             "TrustServerCertificate=yes;"
         ),
         description="ODBC connection string for FILETABLE operations",
+    )
+    product_report_storage_dir: str = Field(
+        default=r"D:\pdf",
+        description="Root folder for product full report attachments",
     )
 
 
